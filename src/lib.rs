@@ -16,16 +16,17 @@ extern "C" {
     fn getlen() -> i32;
     fn write_buffer(idx: i32, c: i32);
     fn usegas(gas: i32);
+    fn rvec(ptr: *mut u8, idx: i32, len: i32);
+    fn wvec(ptr: *mut u8, idx: i32, len: i32);
 }
 
 #[wasm_bindgen]
 pub fn test() -> u32 {
-    let mut input = vec![];
     let input_len = getlen();
-    for i in 0..input_len {
-        input.push(read_buffer(i) as u8)
-        // input.push(0 as u8)
-    }
+    let mut input = vec![0; input_len as usize];
+
+    rvec(input.as_mut_ptr(), 0, input_len);
+
     usegas(input_len / 10 + 1);
 
     let mut hasher = Keccak::v256();
@@ -38,9 +39,15 @@ pub fn test() -> u32 {
     // read hash digest
     hasher.finalize(&mut output);
 
+    /*
+    for i in 0..32 {
+        write_buffer(i, input[i as usize] as i32)
+    };
     for i in 0..32 {
         write_buffer(i, output[i as usize] as i32)
     };
+    */
+    wvec(output.as_mut_ptr(), 0, 32);
     setlen(32);
 
     0
